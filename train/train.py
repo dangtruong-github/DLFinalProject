@@ -3,16 +3,35 @@ import torch
 import os
 
 from evaluation.basic_summary import summary
+from rnn_seq2seq.init_load_save import initSeq2Seq
+from constant import SEQ2SEQ, TRANSFORMER
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
+
+
+def save_model(model, optimizer, epoch, path):
+    torch.save({
+        'epoch': epoch,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+    }, path)
+
+
+def load_model(model, optimizer, path):
+    checkpoint = torch.load(path, map_location=torch.device(device))
+
+    print(type(checkpoint["model_state_dict"]))
+
+    model.load_state_dict(checkpoint["model_state_dict"])
+    optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+    epoch = checkpoint["epoch"]
+
+    return model, optimizer, epoch
 
 
 def train(
     train_loader,
     val_loader,
-    init_model,
-    load_model,
-    save_model,
     source_dict,
     target_dict,
     config
@@ -27,6 +46,11 @@ def train(
     type_model = config["train"]["type_model"]
     file_save = config["train"]["file_save"]
     batch_print = config["train"]["batch_print"]
+
+    if type_model == SEQ2SEQ:
+        init_model = initSeq2Seq
+    elif type_model == TRANSFORMER:
+        pass
 
     cur_epoch = -1
 
