@@ -4,7 +4,7 @@ import os
 
 from evaluation.basic_summary import summary
 from train.rnn_seq2seq.init_load_save import initSeq2Seq
-from constant import SEQ2SEQ, TRANSFORMER
+from common_functions.constant import SEQ2SEQ, TRANSFORMER
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
