@@ -1,6 +1,6 @@
 # Import necessary libraries + config
 from configparser import ConfigParser
-from data_preprocessing.pipeline import ProcessingPipeLine
+from data_preprocessing.pipeline import ProcessingPipeline
 
 # from train.train import train
 
@@ -9,7 +9,7 @@ config.read("config.ini")
 
 # Data preprocess + data loader
 # !!Create dictionary
-ProcessingPipeLine(config)
+ProcessingPipeline(config)
 
 # Train
 # train
