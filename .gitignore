@@ -2,8 +2,8 @@
 *.tgz
 model_save/
 data/*
-#!data/*.en
-#!data/*.vi
+!data/*.en
+!data/*.vi
 config.ini
 
 
