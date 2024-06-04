@@ -3,6 +3,7 @@ from configparser import ConfigParser
 
 from train.train import train
 
+
 config = ConfigParser()
 config.read("config.ini")
 

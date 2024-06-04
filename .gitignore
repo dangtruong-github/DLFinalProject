@@ -1,6 +1,9 @@
 # Others
 *.tgz
-ModelSave/*
+model_save/
+data/
+config.ini
+
 
 
 # Byte-compiled / optimized / DLL files
