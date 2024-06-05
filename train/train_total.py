@@ -64,6 +64,8 @@ def train(
     type_model = config["train"]["model"]
     batch_print = int(config["train"]["batch_print"])
 
+    test_bool = bool(config["general"]["test"])
+
     parent_folder_name = config["general"]["containing_folder"]
     parent_directory = GetParentPath(parent_folder_name, __file__)
 
@@ -124,7 +126,10 @@ def train(
         model.train()
 
         for batch_idx, (data, label) in enumerate(train_loader):
-            break
+            if test_bool:
+                if batch_idx > 0:
+                    break
+
             # Data to CUDA if possible
             data = data.to(device=device)
             label = label.to(device=device)
@@ -179,7 +184,7 @@ def train(
                            path=MODEL_SAVE_PATH)
 
         # Validation
-        val_acc, val_loss = summary(val_loader, model, criterion)
+        val_acc, val_loss = summary(config, val_loader, model, criterion)
 
         print("Finish summary")
 

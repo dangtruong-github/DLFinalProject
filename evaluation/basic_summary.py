@@ -8,6 +8,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def summary(
+    config,
     loader: DataLoader,
     model: nn.Module,
     criterion: nn.modules.loss._Loss
@@ -19,6 +20,8 @@ def summary(
     num_samples = 0
     loss_epoch = 0
     loss_avg = 0
+
+    test_bool = bool(config["general"]["test"])
 
     model.eval()
 
@@ -52,7 +55,8 @@ def summary(
 
             if (index + 1) % 100 == 0:
                 print(f"Finish summary batch {index}")
-                break
+                if test_bool:
+                    break
 
         acc = float(num_correct)/float(num_samples) * 100.0
         loss_avg = float(loss_epoch)/float(len(loader))
