@@ -1,3 +1,5 @@
+from torch.utils.data import DataLoader
+
 from .dictionary_creator import CreateDictionary
 from .index_converter import FileToIndices
 from .loader import CustomLoader
@@ -10,6 +12,9 @@ def ProcessingPipeline(config):
     FileToIndices(config, type_dataset="test")
 
 
-def LoaderPipeline(config, type_dataset):
+def LoaderPipeline(
+    config,
+    type_dataset
+) -> DataLoader:
     loader = CustomLoader(config, type_dataset)
     return loader

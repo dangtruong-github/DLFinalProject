@@ -4,6 +4,7 @@ import torch.optim as optim
 
 import os
 import json
+from typing import Tuple
 
 from .model import Seq2Seq
 from .encoder_decoder import Encoder, Decoder
@@ -12,7 +13,13 @@ from common_functions.functions import GetParentPath
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def initSeq2Seq(config):
+def initSeq2Seq(
+    config
+) -> Tuple[
+    nn.Module,
+    nn.modules.loss._Loss,
+    optim.Optimizer
+]:
     """
     Args:
     - config: get from config.ini file

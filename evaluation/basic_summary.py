@@ -1,9 +1,20 @@
 import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+
+from typing import Tuple
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def summary(loader, model, criterion):
+def summary(
+    loader: DataLoader,
+    model: nn.Module,
+    criterion: nn.modules.loss._Loss
+) -> Tuple[
+    float,
+    float
+]:
     num_correct = 0
     num_samples = 0
     loss_epoch = 0
@@ -38,6 +49,10 @@ def summary(loader, model, criterion):
             loss = criterion(prob, label)
 
             loss_epoch += loss.item()
+
+            if (index + 1) % 100 == 0:
+                print(f"Finish summary batch {index}")
+                break
 
         acc = float(num_correct)/float(num_samples) * 100.0
         loss_avg = float(loss_epoch)/float(len(loader))

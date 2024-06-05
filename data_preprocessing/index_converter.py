@@ -28,7 +28,7 @@ def SentenceToIndex(
     while len(indices) < max_indices:
         indices.append(dict_words["<pad>"])
 
-    np_indices = np.array(indices, dtype=np.int16)
+    np_indices = np.array(indices, dtype=np.int32)
 
     return np_indices
 
@@ -38,7 +38,7 @@ def ConcatVnEnIndices(
     en_np_indices: np.array
 ) -> np.array:
     concat_indices = np.concatenate((vn_np_indices, en_np_indices),
-                                    dtype=np.int16)
+                                    dtype=np.int32)
     concat_indices = np.expand_dims(concat_indices, axis=0)
     return concat_indices
 
@@ -113,7 +113,7 @@ def FileToIndices(
                     tmp_indices = cur_indices
                 else:
                     tmp_indices = np.concatenate([tmp_indices, cur_indices],
-                                                 axis=0, dtype=np.int16)
+                                                 axis=0, dtype=np.int32)
 
                 if index % 1000 == 0:
                     print(f"Finish index {index}")
@@ -124,7 +124,7 @@ def FileToIndices(
 
                         total_indices = np.concatenate(
                             (total_indices, tmp_indices),
-                            axis=0, dtype=np.int16)
+                            axis=0, dtype=np.int32)
                     else:
                         total_indices = tmp_indices
 
@@ -144,7 +144,7 @@ def FileToIndices(
 
             total_indices = np.concatenate(
                 (total_indices, tmp_indices),
-                axis=0, dtype=np.int16)
+                axis=0, dtype=np.int32)
         else:
             total_indices = tmp_indices
 

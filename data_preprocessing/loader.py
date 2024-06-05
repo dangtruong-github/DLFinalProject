@@ -28,8 +28,8 @@ class CustomDataset(Dataset):
         vn_indices = self.data[index][:self.vn_max_indices]
         en_indices = self.data[index][self.vn_max_indices:]
 
-        torch_vn_indices = torch.tensor(vn_indices, dtype=torch.int16)
-        torch_en_indices = torch.tensor(en_indices, dtype=torch.int16)
+        torch_vn_indices = torch.tensor(vn_indices, dtype=torch.int64)
+        torch_en_indices = torch.tensor(en_indices, dtype=torch.int64)
 
         return (torch_vn_indices, torch_en_indices)
 

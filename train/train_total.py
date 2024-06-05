@@ -1,20 +1,23 @@
 import torch
+import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data import DataLoader
 
 import os
 import json
+from typing import Tuple
+from datetime import datetime
 
 from evaluation.basic_summary import summary
 from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
 from common_functions.constant import SEQ2SEQ, TRANSFORMER
 from common_functions.functions import GetParentPath
-import datetime
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def save_model(
-    model,
+    model: nn.Module,
     optimizer,
     epoch: int,
     path: str
@@ -27,10 +30,14 @@ def save_model(
 
 
 def load_model(
-    model,
+    model: nn.Module,
     optimizer,
     path
-):
+) -> Tuple[
+    nn.Module,
+    optim.Optimizer,
+    int
+]:
     checkpoint = torch.load(path, map_location=torch.device(device))
 
     print(type(checkpoint["model_state_dict"]))
@@ -60,7 +67,8 @@ def train(
     parent_folder_name = config["general"]["containing_folder"]
     parent_directory = GetParentPath(parent_folder_name, __file__)
 
-    cur_date = datetime.datetime.now()
+    cur_date = datetime.now().strftime("%Y%m%d-%H%M%S")
+    print(cur_date)
     file_save = "{}_{}".format(type_model, cur_date)
 
     if type_model == SEQ2SEQ:
@@ -75,10 +83,17 @@ def train(
     # numpy_final_result = [[] for _ in range(20)]
 
     SAVE_FOLDER = os.path.join(parent_directory, "model_save", type_model)
+
+    if not os.path.exists(os.path.dirname(SAVE_FOLDER)):
+        os.makedirs(os.path.dirname(SAVE_FOLDER))
+
+    if not os.path.exists(SAVE_FOLDER):
+        os.makedirs(SAVE_FOLDER)
+
     MODEL_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.pt".format(file_save))
     JSON_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.json".format(file_save))
 
-    if os.path.exists(MODEL_SAVE_PATH):
+    if os.path.exists(MODEL_SAVE_PATH) and os.path.exists(JSON_SAVE_PATH):
         model, optimizer, cur_epoch = load_model(model,
                                                  optimizer,
                                                  path=MODEL_SAVE_PATH)
@@ -109,6 +124,7 @@ def train(
         model.train()
 
         for batch_idx, (data, label) in enumerate(train_loader):
+            break
             # Data to CUDA if possible
             data = data.to(device=device)
             label = label.to(device=device)
@@ -165,6 +181,8 @@ def train(
         # Validation
         val_acc, val_loss = summary(val_loader, model, criterion)
 
+        print("Finish summary")
+
         train_acc_cur = float(correct_samples) / float(total_samples + 1e-12)
         train_acc_cur *= 100
 
@@ -194,7 +212,7 @@ def train(
                     "val_loss_list": val_loss_list
                 }
 
-                json.dump(json_data_save)
+                json.dump(json_data_save, f)
 
         cur_epoch = epoch
 

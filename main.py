@@ -10,7 +10,7 @@ config.read("config.ini")
 
 # Data preprocess + data loader
 # !!Create dictionary
-#ProcessingPipeline(config)
+ProcessingPipeline(config)
 train_loader = LoaderPipeline(config, "train")
 val_loader = LoaderPipeline(config, "val")
 
