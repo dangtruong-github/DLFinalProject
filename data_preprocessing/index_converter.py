@@ -6,7 +6,11 @@ import gc
 from common_functions.functions import GetParentPath
 
 
-def SentenceToIndex(sentence, dict_words, max_indices):
+def SentenceToIndex(
+    sentence: str,
+    dict_words: dict,
+    max_indices: int
+) -> np.array:
     indices = []
     tokens = sentence.split(" ")
 
@@ -29,14 +33,21 @@ def SentenceToIndex(sentence, dict_words, max_indices):
     return np_indices
 
 
-def ConcatVnEnIndices(vn_np_indices, en_np_indices):
+def ConcatVnEnIndices(
+    vn_np_indices: np.array,
+    en_np_indices: np.array
+) -> np.array:
     concat_indices = np.concatenate((vn_np_indices, en_np_indices),
                                     dtype=np.int16)
     concat_indices = np.expand_dims(concat_indices, axis=0)
     return concat_indices
 
 
-def FileToIndices(config, type_dataset, window=700):
+def FileToIndices(
+    config,
+    type_dataset: str,
+    window: int = 700
+):
     if type_dataset not in ["train", "val", "test"]:
         raise Exception(f"Type dataset {type_dataset} does not exist")
 

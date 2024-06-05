@@ -1,15 +1,24 @@
 import torch
+from torch.utils.data import DataLoader
 
 import os
+import json
 
 from evaluation.basic_summary import summary
 from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
 from common_functions.constant import SEQ2SEQ, TRANSFORMER
+from common_functions.functions import GetParentPath
+import datetime
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def save_model(model, optimizer, epoch, path):
+def save_model(
+    model,
+    optimizer,
+    epoch: int,
+    path: str
+):
     torch.save({
         'epoch': epoch,
         'model_state_dict': model.state_dict(),
@@ -17,7 +26,11 @@ def save_model(model, optimizer, epoch, path):
     }, path)
 
 
-def load_model(model, optimizer, path):
+def load_model(
+    model,
+    optimizer,
+    path
+):
     checkpoint = torch.load(path, map_location=torch.device(device))
 
     print(type(checkpoint["model_state_dict"]))
@@ -30,11 +43,9 @@ def load_model(model, optimizer, path):
 
 
 def train(
-    train_loader,
-    val_loader,
-    source_dict,
-    target_dict,
-    config
+    config,
+    train_loader: DataLoader,
+    val_loader: DataLoader
 ):
     train_acc_list = []
     train_loss_list = []
@@ -42,10 +53,15 @@ def train(
     val_acc_list = []
     val_loss_list = []
 
-    num_epochs = config["train"]["epoch"]
-    type_model = config["train"]["type_model"]
-    file_save = config["train"]["file_save"]
-    batch_print = config["train"]["batch_print"]
+    num_epochs = int(config["train"]["epoch"])
+    type_model = config["train"]["model"]
+    batch_print = int(config["train"]["batch_print"])
+
+    parent_folder_name = config["general"]["containing_folder"]
+    parent_directory = GetParentPath(parent_folder_name, __file__)
+
+    cur_date = datetime.datetime.now()
+    file_save = "{}_{}".format(type_model, cur_date)
 
     if type_model == SEQ2SEQ:
         init_model = initSeq2Seq
@@ -54,18 +70,27 @@ def train(
 
     cur_epoch = -1
 
-    model, criterion, optimizer = init_model(config, source_dict, target_dict)
+    model, criterion, optimizer = init_model(config)
 
     # numpy_final_result = [[] for _ in range(20)]
 
-    SAVE_FOLDER = os.path.join(os.getcwd(), "model_save", type_model)
+    SAVE_FOLDER = os.path.join(parent_directory, "model_save", type_model)
     MODEL_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.pt".format(file_save))
-    # JSON_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.json".format(file_save))
+    JSON_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.json".format(file_save))
 
     if os.path.exists(MODEL_SAVE_PATH):
         model, optimizer, cur_epoch = load_model(model,
                                                  optimizer,
                                                  path=MODEL_SAVE_PATH)
+
+        with open(JSON_SAVE_PATH, "r") as f:
+            json_data = json.load(f)
+
+            train_acc_list = json_data["train_acc_list"]
+            train_loss_list = json_data["train_loss_list"]
+
+            val_acc_list = json_data["val_acc_list"]
+            val_loss_list = json_data["val_loss_list"]
 
         # with open(NUMPY_SAVE_PATH, 'rb') as f:
         #    numpy_final_result = pickle.load(f)
@@ -159,6 +184,17 @@ def train(
                        optimizer=optimizer,
                        epoch=epoch,
                        path=MODEL_SAVE_PATH)
+
+            with open(JSON_SAVE_PATH, "w") as f:
+                json_data_save = {
+                    "train_acc_list": train_acc_list,
+                    "train_loss_list": train_loss_list,
+
+                    "val_acc_list": val_acc_list,
+                    "val_loss_list": val_loss_list
+                }
+
+                json.dump(json_data_save)
 
         cur_epoch = epoch
 

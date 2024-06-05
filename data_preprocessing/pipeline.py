@@ -1,5 +1,6 @@
 from .dictionary_creator import CreateDictionary
 from .index_converter import FileToIndices
+from .loader import CustomLoader
 
 
 def ProcessingPipeline(config):
@@ -10,4 +11,5 @@ def ProcessingPipeline(config):
 
 
 def LoaderPipeline(config, type_dataset):
-    pass
+    loader = CustomLoader(config, type_dataset)
+    return loader

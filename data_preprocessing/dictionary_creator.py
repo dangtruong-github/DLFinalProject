@@ -4,7 +4,10 @@ import os
 from common_functions.functions import GetParentPath
 
 
-def to_dict(file_read, file_path):
+def to_dict(
+    file_read: str,
+    file_path: str
+):
     dict_words = {}
     dict_words["<pad>"] = 0
     dict_words["<eos>"] = 1
