@@ -5,6 +5,8 @@ data/*
 !data/*.en
 !data/*.vi
 config.ini
+run.txt
+requirements.yml
 
 
 
