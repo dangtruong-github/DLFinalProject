@@ -2,13 +2,11 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-import os
-import json
 from typing import Tuple
 
 from .model import Seq2Seq
 from .encoder_decoder import Encoder, Decoder
-from common_functions.functions import GetParentPath
+from common_functions.functions import GetDict
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -35,20 +33,7 @@ def initSeq2Seq(
     num_layers = int(config["rnn_seq2seq"]["num_layers"])
     dropout_rate = float(config["rnn_seq2seq"]["dropout_rate"])
 
-    vn_filename_dict = config["preprocessing"]["vn_filename_dict"]
-    en_filename_dict = config["preprocessing"]["en_filename_dict"]
-
-    parent_folder_name = config["general"]["containing_folder"]
-    parent_directory = GetParentPath(parent_folder_name, __file__)
-
-    vn_dict_path = os.path.join(parent_directory, "data", vn_filename_dict)
-    en_dict_path = os.path.join(parent_directory, "data", en_filename_dict)
-
-    with open(vn_dict_path, "r") as f:
-        source_dict = json.load(f)
-
-    with open(en_dict_path, "r") as f:
-        target_dict = json.load(f)
+    source_dict, target_dict = GetDict(config)
 
     encoder = Encoder(len(source_dict.keys()),
                       embeddings_size,

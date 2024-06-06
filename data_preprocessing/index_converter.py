@@ -1,36 +1,9 @@
 import os
-import json
 import numpy as np
 import gc
 
-from common_functions.functions import GetParentPath
-
-
-def SentenceToIndex(
-    sentence: str,
-    dict_words: dict,
-    max_indices: int
-) -> np.array:
-    indices = []
-    tokens = sentence.split(" ")
-
-    for index, token in enumerate(tokens):
-        if index >= max_indices:
-            break
-
-        token = token.capitalize()
-
-        if token in dict_words.keys():
-            indices.append(dict_words[token])
-        else:
-            indices.append(dict_words["<unk>"])
-
-    while len(indices) < max_indices:
-        indices.append(dict_words["<pad>"])
-
-    np_indices = np.array(indices, dtype=np.int32)
-
-    return np_indices
+from common_functions.functions import GetParentPath, GetDict
+from common_functions.functions import SentenceToIndices
 
 
 def ConcatVnEnIndices(
@@ -58,9 +31,6 @@ def FileToIndices(
 
     key_filename_to_save = "filename_to_save_" + type_dataset
     filename_to_save = config["preprocessing"][key_filename_to_save]
-
-    vn_filename_dict = config["preprocessing"]["vn_filename_dict"]
-    en_filename_dict = config["preprocessing"]["en_filename_dict"]
     vn_max_indices = int(config["preprocessing"]["vn_max_indices"])
     en_max_indices = int(config["preprocessing"]["vn_max_indices"])
 
@@ -70,16 +40,8 @@ def FileToIndices(
     en_filename_path = os.path.join(parent_directory, "data", en_filename)
     filename_to_save_path = os.path.join(parent_directory, "data",
                                          filename_to_save)
-    vn_filename_dict_path = os.path.join(parent_directory, "data",
-                                         vn_filename_dict)
-    en_filename_dict_path = os.path.join(parent_directory, "data",
-                                         en_filename_dict)
 
-    with open(vn_filename_dict_path, "r") as file:
-        vn_dict = json.load(file)
-
-    with open(en_filename_dict_path, "r") as file:
-        en_dict = json.load(file)
+    vn_dict, en_dict = GetDict(config)
 
     total_indices = None
     tmp_indices = None
@@ -102,10 +64,10 @@ def FileToIndices(
                 vn_row = vn_row[:-1]
                 en_row = en_data[index][:-1]
 
-                vn_np_indices = SentenceToIndex(vn_row, vn_dict,
-                                                vn_max_indices)
-                en_np_indices = SentenceToIndex(en_row, en_dict,
-                                                en_max_indices)
+                vn_np_indices = SentenceToIndices(vn_row, vn_dict,
+                                                  vn_max_indices)
+                en_np_indices = SentenceToIndices(en_row, en_dict,
+                                                  en_max_indices)
 
                 cur_indices = ConcatVnEnIndices(vn_np_indices, en_np_indices)
 

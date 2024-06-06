@@ -1,4 +1,6 @@
 import os
+import json
+import numpy as np
 
 
 def GetParentPath(parent_folder_name, file):
@@ -8,3 +10,87 @@ def GetParentPath(parent_folder_name, file):
         parent_directory = os.path.dirname(parent_directory)
 
     return parent_directory
+
+
+def GetDict(config):
+    vn_filename_dict = config["preprocessing"]["vn_filename_dict"]
+    en_filename_dict = config["preprocessing"]["en_filename_dict"]
+
+    parent_folder_name = config["general"]["containing_folder"]
+    parent_directory = GetParentPath(parent_folder_name, __file__)
+
+    vn_dict_path = os.path.join(parent_directory, "data", vn_filename_dict)
+    en_dict_path = os.path.join(parent_directory, "data", en_filename_dict)
+
+    with open(vn_dict_path, "r") as f:
+        source_dict = json.load(f)
+
+    with open(en_dict_path, "r") as f:
+        target_dict = json.load(f)
+
+    return source_dict, target_dict
+
+
+def IndicesToSentence(
+    np_indices: np.array,
+    dict_words: dict
+) -> str:
+    sentence = ""
+    rev_dict_words = {value: key for key, value in dict_words.items()}
+
+    for i in range(np_indices.shape[0]):
+        word = rev_dict_words[np_indices[i]]
+
+        if word == "<pad>":
+            break
+        elif word == "<eos>":
+            break
+        elif word == "<sos>":
+            continue
+        elif word == "<unk>":
+            sentence += "John "
+            continue
+
+        sentence += rev_dict_words[np_indices[i]]
+        sentence += " "
+
+    sentence = sentence[:-1]
+    return sentence
+
+
+def SentenceToIndices(
+    sentence: str,
+    dict_words: dict,
+    max_indices: int
+) -> np.array:
+    indices = []
+    tokens = sentence.split(" ")
+
+    indices.append(dict_words["<sos>"])
+
+    for index, token in enumerate(tokens):
+        if index >= max_indices - 1:
+            break
+
+        token = token.capitalize()
+
+        if token in dict_words.keys():
+            indices.append(dict_words[token])
+        else:
+            indices.append(dict_words["<unk>"])
+
+    if len(indices) < max_indices:
+        indices.append(dict_words["<eos>"])
+
+    while len(indices) < max_indices:
+        indices.append(dict_words["<pad>"])
+
+    np_indices = np.array(indices, dtype=np.int32)
+
+    if np_indices.shape[0] != max_indices:
+        print(indices)
+        print(np_indices)
+        print(sentence)
+        print(len(indices))
+
+    return np_indices
