@@ -2,7 +2,7 @@
 from configparser import ConfigParser
 from data_preprocessing.pipeline import ProcessingPipeline, LoaderPipeline
 from train.pipeline import TrainPipeline
-from evaluation.bleu_score import CalculateBLEUScore
+# from evaluation.bleu_score import CalculateBLEUScore
 
 # from train.train import train
 

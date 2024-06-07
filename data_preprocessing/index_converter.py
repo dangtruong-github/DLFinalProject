@@ -30,7 +30,9 @@ def FileToIndices(
     en_filename = config["preprocessing"]["en_filename_" + type_dataset]
 
     key_filename_to_save = "filename_to_save_" + type_dataset
+    key_filename_to_save_noise = "filename_to_save_noise_" + type_dataset
     filename_to_save = config["preprocessing"][key_filename_to_save]
+    filename_save_noise = config["preprocessing"][key_filename_to_save_noise]
     vn_max_indices = int(config["preprocessing"]["vn_max_indices"])
     en_max_indices = int(config["preprocessing"]["vn_max_indices"])
 
@@ -40,6 +42,8 @@ def FileToIndices(
     en_filename_path = os.path.join(parent_directory, "data", en_filename)
     filename_to_save_path = os.path.join(parent_directory, "data",
                                          filename_to_save)
+    filename_to_save_noise_path = os.path.join(parent_directory, "data",
+                                               filename_save_noise)
 
     vn_dict, en_dict = GetDict(config)
 
@@ -47,12 +51,18 @@ def FileToIndices(
     tmp_indices = None
     cur_index = 0
 
+    noise_indices = []
+    noise_indices_tmp = []
+
     if os.path.exists(filename_to_save_path):
         total_indices = np.load(filename_to_save_path)
+        noise_indices = np.load(filename_to_save_noise_path)
+        noise_indices = noise_indices.tolist()
 
-        cur_index = total_indices.shape[0]
+        cur_index = total_indices.shape[0] + len(noise_indices)
         print(f"Cached indices shape: {cur_index}")
         total_indices = None
+        noise_indices = []
 
     with open(vn_filename_path, "r", encoding='utf8') as vn_file:
         with open(en_filename_path, "r", encoding='utf8') as en_file:
@@ -69,6 +79,14 @@ def FileToIndices(
                 en_np_indices = SentenceToIndices(en_row, en_dict,
                                                   en_max_indices)
 
+                if isinstance(vn_np_indices, bool) or isinstance(en_np_indices,
+                                                                 bool):
+                    print(f"Noise index: {index}")
+                    noise_indices_tmp.append(index)
+                    print(f"VN sentence: {vn_row}")
+                    print(f"EN sentence: {en_row}")
+                    continue
+
                 cur_indices = ConcatVnEnIndices(vn_np_indices, en_np_indices)
 
                 if tmp_indices is None:
@@ -81,6 +99,7 @@ def FileToIndices(
                     print(f"Finish index {index}")
 
                 if tmp_indices.shape[0] >= window:
+                    # tmp_indices
                     if os.path.exists(filename_to_save_path):
                         total_indices = np.load(filename_to_save_path)
 
@@ -97,6 +116,23 @@ def FileToIndices(
                     tmp_indices = None
 
                     gc.collect()
+
+                    # noise_indices
+                    if os.path.exists(filename_to_save_noise_path):
+                        noise_indices = np.load(filename_to_save_noise_path)
+                        noise_indices = noise_indices.tolist()
+                        noise_indices.extend(noise_indices_tmp)
+                    else:
+                        noise_indices = noise_indices_tmp
+
+                    noise_indices = np.array(noise_indices)
+
+                    np.save(filename_to_save_noise_path, noise_indices)
+                    print(f"Current noise indices size {noise_indices.shape}")
+
+                    noise_indices = None
+                    noise_indices_tmp = []
+
                     print(f"Current in index {index}")
                     print("Success")
 
@@ -117,5 +153,7 @@ def FileToIndices(
         tmp_indices = None
 
         gc.collect()
+
+    print(f"Total noise indices: {noise_indices}")
 
     print("Success converting to indices")

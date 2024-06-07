@@ -13,6 +13,7 @@ class Seq2Seq(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
         self.rev_words_dict = rev_words_dict
+        self.word_dict = {value: key for key, value in rev_words_dict.items()}
         self.vocab_len = len(rev_words_dict.keys())
 
     def forward(self, source, target, teacher_force_ratio=.5):
@@ -25,11 +26,13 @@ class Seq2Seq(nn.Module):
         outputs = torch.zeros(target_len,
                               batch_size,
                               self.vocab_len).to(device=device)
-        outputs[0, :, 1] = torch.tensor(1)
+        outputs[0, :, self.word_dict["<sos>"]] = torch.tensor(1)
 
         hidden, cell = self.encoder(source)
 
         x = target[0]
+
+        print(x)
 
         for i in range(1, target_len):
             output, hidden, cell = self.decoder(x, hidden, cell)
@@ -41,6 +44,8 @@ class Seq2Seq(nn.Module):
             rando = random.random() < teacher_force_ratio
             x = target[i] if rando else best_guess
 
+        # print(f"Output inside seq2seq forward: {outputs[:5]}")
+
         return outputs
 
     def predict(self, source, max_len=50):
@@ -48,7 +53,7 @@ class Seq2Seq(nn.Module):
 
         hidden, cell = self.encoder(source)
 
-        x = torch.tensor(1, dtype=torch.int64)
+        x = torch.tensor(self.word_dict["<sos>"], dtype=torch.int64)
 
         outputs[0] = x
 
@@ -63,7 +68,7 @@ class Seq2Seq(nn.Module):
 
             outputs[i] = best_guess
 
-            if self.rev_words_dict[int(best_guess)] in ["<eos>", "pad"]:
+            if self.rev_words_dict[int(best_guess)] in ["<eos>", "<pad>"]:
                 break
 
             x = best_guess

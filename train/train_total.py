@@ -57,9 +57,11 @@ def train(
 ):
     train_acc_list = []
     train_loss_list = []
+    train_bleu_score_list = []
 
     val_acc_list = []
     val_loss_list = []
+    val_bleu_score_list = []
 
     num_epochs = int(config["train"]["epoch"])
     type_model = config["train"]["model"]
@@ -139,17 +141,30 @@ def train(
             # Data to CUDA if possible
             data = data.to(device=device)
             label = label.to(device=device)
+            # print(f"Orig data shape: {data.shape}")
+            # print(f"Orig label shape: {label.shape}")
 
             data = torch.moveaxis(data, 1, 0)
             label = torch.moveaxis(label, 1, 0)
+            # print(f"After data shape: {data.shape}")
+            # print(f"After label shape: {label.shape}")
 
             optimizer.zero_grad()
 
             prob = model(data, label)
-            # prob.requires_grad=True
             prob.retain_grad()
 
             pred = torch.argmax(prob, dim=2)
+
+            current_correct = (pred == label).sum()
+            current_size = pred.shape[0] * pred.shape[1]
+
+            correct_samples += current_correct
+            total_samples += current_size
+
+            prob = torch.moveaxis(prob, (1, 2), (0, 1))
+            label = torch.moveaxis(label, 1, 0)
+            pred = torch.moveaxis(pred, 1, 0)
 
             if batch_idx == 0:
                 pred_torch = pred
@@ -162,27 +177,16 @@ def train(
                 print(f"Train prediction shape: {pred_torch.shape}")
                 print(f"Train label shape: {ref_torch.shape}")
 
-            current_correct = (pred == label).sum()
-            current_size = pred.shape[0] * pred.shape[1]
-
-            correct_samples += current_correct
-            total_samples += current_size
-
-            prob = torch.moveaxis(prob, (1, 2), (0, 1))
-            label = torch.moveaxis(label, 1, 0)
-
-            # print(data.shape)
-            # print(label.shape)
-            # print(pred.shape)
-            # print(prob.shape)
+            # print(f"After model prob shape: {prob.shape}")
+            # print(f"After model label shape: {label.shape}")
+            # print(f"After model data shape: {data.shape}")
+            # print(f"After model pred shape: {pred.shape}")
 
             loss = criterion(prob, label)
             loss.retain_grad()
-            # loss.requires_grad=True
             loss.backward()
 
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
-            # optimizer.requires_grad=True
             optimizer.step()
 
             loss_epoch += loss.item()
@@ -238,7 +242,8 @@ def train(
                     "train_bleu_score": train_bleu_score_list,
 
                     "val_acc_list": val_acc_list,
-                    "val_loss_list": val_loss_list
+                    "val_loss_list": val_loss_list,
+                    "val_bleu_score": val_bleu_score_list
                 }
 
                 json.dump(json_data_save, f)

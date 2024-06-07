@@ -40,11 +40,17 @@ def BLEUScoreFromIndices(
     pred_sentence = []
     ref_sentence = []
 
+    print("<sos> token index: {}".format(en_dict["<sos>"]))
+    print("<eos> token index: {}".format(en_dict["<eos>"]))
+
     for i in range(predictions.shape[0]):
         pred_sentence.append(IndicesToSentence(predictions[i, :], en_dict))
+        # print(predictions[i, :])
         ref_sentence.append([IndicesToSentence(references[i, :], en_dict)])
 
     # Load the BLEU metric
+    print(f"Pred sentence inside BLEUSCore func: {pred_sentence}")
+    print(f"Ref sentence inside BLEUSCore func: {ref_sentence}")
     score = CalculateBLEUScore(pred_sentence, ref_sentence)
 
     return score

@@ -35,6 +35,7 @@ def IndicesToSentence(
     np_indices: np.array,
     dict_words: dict
 ) -> str:
+    print(np_indices[:5])
     sentence = ""
     rev_dict_words = {value: key for key, value in dict_words.items()}
 
@@ -55,6 +56,7 @@ def IndicesToSentence(
         sentence += " "
 
     sentence = sentence[:-1]
+    print(sentence)
     return sentence
 
 
@@ -72,7 +74,11 @@ def SentenceToIndices(
         if index >= max_indices - 1:
             break
 
-        token = token.capitalize()
+        try:
+            if token[0].isupper():
+                token = token.capitalize()
+        except Exception:
+            return False
 
         if token in dict_words.keys():
             indices.append(dict_words[token])
@@ -86,11 +92,5 @@ def SentenceToIndices(
         indices.append(dict_words["<pad>"])
 
     np_indices = np.array(indices, dtype=np.int32)
-
-    if np_indices.shape[0] != max_indices:
-        print(indices)
-        print(np_indices)
-        print(sentence)
-        print(len(indices))
 
     return np_indices

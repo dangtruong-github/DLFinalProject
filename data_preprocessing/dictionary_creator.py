@@ -22,7 +22,12 @@ def to_dict(
             tokens = sentence.split(" ")
 
             for token in tokens:
-                token = token.capitalize()
+                try:
+                    if token[0].isupper():
+                        token = token.capitalize()
+                except Exception:
+                    continue
+
                 if token not in dict_words.keys():
                     dict_words[token] = index
                     index += 1
