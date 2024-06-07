@@ -4,15 +4,18 @@ from torch.utils.data import DataLoader
 
 from typing import Tuple
 
+from evaluation.bleu_score import BLEUScoreFromIndices
+
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def summary(
+def Summary(
     config,
     loader: DataLoader,
     model: nn.Module,
     criterion: nn.modules.loss._Loss
 ) -> Tuple[
+    float,
     float,
     float
 ]:
@@ -23,18 +26,36 @@ def summary(
 
     test_bool = bool(config["general"]["test"])
 
+    pred_torch = None
+    ref_torch = None
+
     model.eval()
 
     acc = 0
 
     with torch.no_grad():
         for index, (data, label) in enumerate(loader):
+            if bool(config["general"]["test"]):
+                if index >= 2:
+                    break
+
             data = data.to(device=device)
             label = label.to(device=device)
 
             prob = model(data, label)
 
             pred = torch.argmax(prob, dim=2)
+
+            if index == 0:
+                pred_torch = pred
+                ref_torch = label
+                # print(f"Summary prediction shape: {pred_torch.shape}")
+                # print(f"Summary label shape: {ref_torch.shape}")
+            else:
+                pred_torch = torch.cat([pred_torch, pred], axis=0)
+                ref_torch = torch.cat([ref_torch, label], axis=0)
+                # print(f"Summary prediction shape: {pred_torch.shape}")
+                # print(f"Summary label shape: {ref_torch.shape}")
 
             current_correct = (pred == label).sum()
             current_size = pred.shape[0] * pred.shape[1]
@@ -61,4 +82,9 @@ def summary(
         acc = float(num_correct)/float(num_samples) * 100.0
         loss_avg = float(loss_epoch)/float(len(loader))
 
-    return acc, loss_avg
+        # BLEU score
+        pred_torch = pred_torch.numpy()
+        ref_torch = ref_torch.numpy()
+        bleu_score = BLEUScoreFromIndices(config, pred_torch, ref_torch)
+
+    return acc, loss_avg, bleu_score

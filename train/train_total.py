@@ -8,7 +8,8 @@ import json
 from typing import Tuple
 from datetime import datetime
 
-from evaluation.basic_summary import summary
+from evaluation.basic_summary import Summary
+from evaluation.bleu_score import BLEUScoreFromIndices
 from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
 from common_functions.constant import SEQ2SEQ, TRANSFORMER
 from common_functions.functions import GetParentPath
@@ -40,7 +41,7 @@ def load_model(
 ]:
     checkpoint = torch.load(path, map_location=torch.device(device))
 
-    print(type(checkpoint["model_state_dict"]))
+    # print(type(checkpoint["model_state_dict"]))
 
     model.load_state_dict(checkpoint["model_state_dict"])
     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
@@ -70,7 +71,7 @@ def train(
     parent_directory = GetParentPath(parent_folder_name, __file__)
 
     cur_date = datetime.now().strftime("%Y%m%d-%H%M%S")
-    print(cur_date)
+    # print(cur_date)
     file_save = "{}_{}".format(type_model, cur_date)
 
     if type_model == SEQ2SEQ:
@@ -105,9 +106,11 @@ def train(
 
             train_acc_list = json_data["train_acc_list"]
             train_loss_list = json_data["train_loss_list"]
+            train_bleu_score_list = json_data["train_bleu_score"]
 
             val_acc_list = json_data["val_acc_list"]
             val_loss_list = json_data["val_loss_list"]
+            val_bleu_score_list = json_data["val_bleu_score"]
 
         # with open(NUMPY_SAVE_PATH, 'rb') as f:
         #    numpy_final_result = pickle.load(f)
@@ -125,21 +128,20 @@ def train(
 
         model.train()
 
+        pred_torch = None
+        ref_torch = None
+
         for batch_idx, (data, label) in enumerate(train_loader):
             if test_bool:
-                if batch_idx > 0:
+                if batch_idx >= 2:
                     break
 
             # Data to CUDA if possible
             data = data.to(device=device)
             label = label.to(device=device)
-            print(data.shape)
-            print(label.shape)
 
             data = torch.moveaxis(data, 1, 0)
             label = torch.moveaxis(label, 1, 0)
-            print(data.shape)
-            print(label.shape)
 
             optimizer.zero_grad()
 
@@ -148,6 +150,17 @@ def train(
             prob.retain_grad()
 
             pred = torch.argmax(prob, dim=2)
+
+            if batch_idx == 0:
+                pred_torch = pred
+                ref_torch = label
+                print(f"Train prediction shape: {pred_torch.shape}")
+                print(f"Train label shape: {ref_torch.shape}")
+            else:
+                pred_torch = torch.cat([pred_torch, pred], axis=0)
+                ref_torch = torch.cat([ref_torch, label], axis=0)
+                print(f"Train prediction shape: {pred_torch.shape}")
+                print(f"Train label shape: {ref_torch.shape}")
 
             current_correct = (pred == label).sum()
             current_size = pred.shape[0] * pred.shape[1]
@@ -183,8 +196,16 @@ def train(
                            epoch=epoch,
                            path=MODEL_SAVE_PATH)
 
+        # BLEU score
+        pred_torch = pred_torch.numpy()
+        ref_torch = ref_torch.numpy()
+        train_bleu_score = BLEUScoreFromIndices(config, pred_torch, ref_torch)
+        pred_torch = None
+        ref_torch = None
+
         # Validation
-        val_acc, val_loss = summary(config, val_loader, model, criterion)
+        val_acc, val_loss, val_bleu_score = Summary(config, val_loader, model,
+                                                    criterion)
 
         print("Finish summary")
 
@@ -193,9 +214,11 @@ def train(
 
         train_acc_list.append(train_acc_cur)
         train_loss_list.append(float(loss_epoch) / float(len(train_loader)))
+        train_bleu_score_list.append(train_bleu_score)
 
         val_acc_list.append(val_acc)
         val_loss_list.append(val_loss)
+        val_bleu_score_list.append(val_bleu_score)
 
         # for i in range(20):
         #    numpy_final_result[i].extend(final_result[i])
@@ -212,6 +235,7 @@ def train(
                 json_data_save = {
                     "train_acc_list": train_acc_list,
                     "train_loss_list": train_loss_list,
+                    "train_bleu_score": train_bleu_score_list,
 
                     "val_acc_list": val_acc_list,
                     "val_loss_list": val_loss_list
@@ -225,6 +249,8 @@ def train(
 
         print(f"Train accuracy: {train_acc_list[-1]}%")
         print(f"Train loss: {train_loss_list[-1]}")
+        print(f"Train BLEU score: {train_bleu_score_list[-1]}")
 
         print(f"Val accuracy: {val_acc_list[-1]}%")
         print(f"Val loss: {val_loss_list[-1]}")
+        print(f"Val BLEU score: {val_bleu_score_list[-1]}")

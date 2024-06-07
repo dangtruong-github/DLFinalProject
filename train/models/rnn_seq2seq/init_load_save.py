@@ -54,8 +54,8 @@ def initSeq2Seq(
                            lr=learning_rate,
                            weight_decay=weight_decay)
 
-    print(type(model))
-    print(type(criterion))
-    print(type(optimizer))
+    # print(type(model))
+    # print(type(criterion))
+    # print(type(optimizer))
 
     return model, criterion, optimizer

@@ -43,7 +43,12 @@ def CustomLoader(
 
     custom_set = CustomDataset(config, type_dataset)
 
+    testing_mode = bool(config["general"]["test"])
     batch_size = int(config["train"]["batch_size"])
+
+    if testing_mode:
+        batch_size = int(config["train"]["batch_size_test"])
+
     shuffle = type_dataset == "train"
 
     custom_loader = DataLoader(custom_set, batch_size, shuffle)
