@@ -11,6 +11,7 @@ from datetime import datetime
 from evaluation.basic_summary import Summary
 from evaluation.bleu_score import BLEUScoreFromIndices
 from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
+from train.models.transformer.init_load_save import initTransformer
 from common_functions.constant import SEQ2SEQ, TRANSFORMER
 from common_functions.functions import GetParentPath
 
@@ -79,7 +80,7 @@ def train(
     if type_model == SEQ2SEQ:
         init_model = initSeq2Seq
     elif type_model == TRANSFORMER:
-        pass
+        init_model = initTransformer
 
     cur_epoch = -1
 
