@@ -16,6 +16,49 @@ def ConcatVnEnIndices(
     return concat_indices
 
 
+def SaveIndices(
+    tmp_indices: np.array,
+    path_indices,
+    tmp_noise: list,
+    path_noise
+):
+    if tmp_indices is None:
+        return
+
+    if os.path.exists(path_indices):
+        total_indices = np.load(path_indices)
+
+        total_indices = np.concatenate(
+            (total_indices, tmp_indices),
+            axis=0, dtype=np.int32)
+    else:
+        total_indices = tmp_indices
+
+    np.save(path_indices, total_indices)
+    print(f"Current shape {total_indices.shape}")
+
+    total_indices = None
+    tmp_indices = None
+
+    gc.collect()
+
+    # noise_indices
+    if len(tmp_noise) > 0:
+        if os.path.exists(path_noise):
+            noise_indices = np.load(path_noise)
+            noise_indices = noise_indices.tolist()
+            noise_indices.extend(tmp_noise)
+        else:
+            noise_indices = tmp_noise
+
+        print(noise_indices)
+
+        noise_indices = np.array(noise_indices)
+
+        np.save(path_noise, noise_indices)
+        print(f"Current noise indices: {noise_indices.shape}")
+
+
 def FileToIndices(
     config,
     type_dataset: str,
@@ -47,19 +90,19 @@ def FileToIndices(
 
     vn_dict, en_dict = GetDict(config)
 
-    total_indices = None
     tmp_indices = None
-    cur_index = 0
-
-    noise_indices = []
     noise_indices_tmp = []
+    cur_index = 0
 
     if os.path.exists(filename_to_save_path):
         total_indices = np.load(filename_to_save_path)
-        noise_indices = np.load(filename_to_save_noise_path)
-        noise_indices = noise_indices.tolist()
 
-        cur_index = total_indices.shape[0] + len(noise_indices)
+        cur_index = total_indices.shape[0]
+
+        if os.path.exists(filename_to_save_noise_path):
+            noise_indices = np.load(filename_to_save_noise_path)
+            cur_index += noise_indices.shape[0]
+
         print(f"Cached indices shape: {cur_index}")
         total_indices = None
         noise_indices = []
@@ -99,61 +142,21 @@ def FileToIndices(
                     print(f"Finish index {index}")
 
                 if tmp_indices.shape[0] >= window:
-                    # tmp_indices
-                    if os.path.exists(filename_to_save_path):
-                        total_indices = np.load(filename_to_save_path)
-
-                        total_indices = np.concatenate(
-                            (total_indices, tmp_indices),
-                            axis=0, dtype=np.int32)
-                    else:
-                        total_indices = tmp_indices
-
-                    np.save(filename_to_save_path, total_indices)
-                    print(f"Current shape {total_indices.shape}")
-
-                    total_indices = None
+                    SaveIndices(
+                        tmp_indices=tmp_indices,
+                        path_indices=filename_to_save_path,
+                        tmp_noise=noise_indices_tmp,
+                        path_noise=filename_to_save_noise_path
+                    )
                     tmp_indices = None
-
-                    gc.collect()
-
-                    # noise_indices
-                    if os.path.exists(filename_to_save_noise_path):
-                        noise_indices = np.load(filename_to_save_noise_path)
-                        noise_indices = noise_indices.tolist()
-                        noise_indices.extend(noise_indices_tmp)
-                    else:
-                        noise_indices = noise_indices_tmp
-
-                    noise_indices = np.array(noise_indices)
-
-                    np.save(filename_to_save_noise_path, noise_indices)
-                    print(f"Current noise indices size {noise_indices.shape}")
-
-                    noise_indices = None
                     noise_indices_tmp = []
-
                     print(f"Current in index {index}")
-                    print("Success")
 
-    if tmp_indices is not None:
-        if os.path.exists(filename_to_save_path):
-            total_indices = np.load(filename_to_save_path)
-
-            total_indices = np.concatenate(
-                (total_indices, tmp_indices),
-                axis=0, dtype=np.int32)
-        else:
-            total_indices = tmp_indices
-
-        np.save(filename_to_save_path, total_indices)
-        print(f"Final shape {total_indices.shape}")
-
-        total_indices = None
-        tmp_indices = None
-
-        gc.collect()
-
-    print(f"Total noise indices: {noise_indices}")
+    SaveIndices(
+        tmp_indices=tmp_indices,
+        path_indices=filename_to_save_path,
+        tmp_noise=noise_indices_tmp,
+        path_noise=filename_to_save_noise_path
+    )
 
     print("Success converting to indices")
