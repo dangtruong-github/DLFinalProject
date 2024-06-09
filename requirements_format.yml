@@ -1,16 +1,17 @@
-name: your_env_name
+name: deeplearning
 channels:
+  - defaults
   - conda-forge
   - nvidia
   - pytorch
-  - defaults
+  - pypi
 dependencies:
-  - pip=23.3.1
-  - python=3.9.18
-  - pytorch
-  - torchaudio
-  - torchvision
-  - numpy
+  - pip=24.0
+  - python=3.9.19
+  - pytorch=2.3.0
+  - torchaudio=2.3.0
+  - torchvision=0.18.0
+  - numpy=1.26.4
   - pip:
-    - evaluate
-    - configparser
+    - evaluate==0.4.2
+    - configparser==7.0.0

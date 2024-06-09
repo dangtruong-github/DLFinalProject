@@ -1,4 +1,4 @@
-torch
-numpy
-configparser
-evaluate
+torch==2.3.0
+numpy==1.26.4
+configparser==7.0.0
+evaluate==0.4.2
