@@ -1,8 +1,8 @@
 from torch.utils.data import DataLoader
 
-from .dictionary_creator import CreateDictionary
-from .index_converter import FileToIndices
-from .loader import CustomLoader
+from data_preprocessing.dictionary_creator import CreateDictionary
+from data_preprocessing.index_converter import FileToIndices
+from data_preprocessing.loader import CustomLoader
 
 
 def ProcessingPipeline(config):

@@ -4,8 +4,8 @@ import torch.optim as optim
 
 from typing import Tuple
 
-from .model import Seq2Seq
-from .encoder_decoder import Encoder, Decoder
+from train.models.rnn_seq2seq.model import Seq2Seq
+from train.models.rnn_seq2seq.encoder_decoder import Encoder, Decoder
 from common_functions.functions import GetDict
 
 device = "cuda" if torch.cuda.is_available() else "cpu"

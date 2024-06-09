@@ -1,6 +1,6 @@
 from torch.utils.data import DataLoader
 
-from .train_total import train
+from train.train_total import train
 
 
 def TrainPipeline(
