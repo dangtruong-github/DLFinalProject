@@ -1,11 +1,16 @@
 name: your_env_name
 channels:
+  - conda-forge
+  - nvidia
+  - pytorch
   - defaults
 dependencies:
   - pip=23.3.1
   - python=3.9.18
+  - pytorch
+  - torchaudio
+  - torchvision
+  - numpy
   - pip:
-    - torch
     - evaluate
-    - numpy
     - configparser
