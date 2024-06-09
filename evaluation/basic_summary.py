@@ -5,6 +5,9 @@ from torch.utils.data import DataLoader
 from typing import Tuple
 
 from evaluation.bleu_score import BLEUScoreFromIndices
+from common_functions.constant import SEQ2SEQ, TRANSFORMER
+from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
+from train.models.transformer.init_load_save import initTransformer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -12,8 +15,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 def Summary(
     config,
     loader: DataLoader,
-    model: nn.Module,
-    criterion: nn.modules.loss._Loss
+    model: nn.Module
 ) -> Tuple[
     float,
     float,
@@ -25,6 +27,14 @@ def Summary(
     loss_avg = 0
 
     test_bool = bool(config["general"]["test"])
+    type_model = config["train"]["model"]
+
+    if type_model == SEQ2SEQ:
+        init_model = initSeq2Seq
+    elif type_model == TRANSFORMER:
+        init_model = initTransformer
+
+    _, criterion, _ = init_model(config)
 
     pred_torch = None
     ref_torch = None

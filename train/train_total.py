@@ -55,7 +55,7 @@ def train(
     config,
     train_loader: DataLoader,
     val_loader: DataLoader
-):
+) -> str:
     train_acc_list = []
     train_loss_list = []
     train_bleu_score_list = []
@@ -64,11 +64,14 @@ def train(
     val_loss_list = []
     val_bleu_score_list = []
 
-    num_epochs = int(config["train"]["epoch"])
     type_model = config["train"]["model"]
     batch_print = int(config["train"]["batch_print"])
 
     test_bool = bool(config["general"]["test"])
+
+    num_epochs = int(config["train"]["epoch"])
+    if test_bool:
+        num_epochs = int(config["train"]["epoch_test"])
 
     parent_folder_name = config["general"]["containing_folder"]
     parent_directory = GetParentPath(parent_folder_name, __file__)
@@ -209,8 +212,7 @@ def train(
         ref_torch = None
 
         # Validation
-        val_acc, val_loss, val_bleu_score = Summary(config, val_loader, model,
-                                                    criterion)
+        val_acc, val_loss, val_bleu_score = Summary(config, val_loader, model)
 
         print("Finish summary")
 
@@ -260,3 +262,5 @@ def train(
         print(f"Val accuracy: {val_acc_list[-1]}%")
         print(f"Val loss: {val_loss_list[-1]}")
         print(f"Val BLEU score: {val_bleu_score_list[-1]}")
+
+    return file_save

@@ -7,5 +7,6 @@ def TrainPipeline(
     config,
     train_loader: DataLoader,
     val_loader: DataLoader
-):
-    train(config, train_loader, val_loader)
+) -> str:
+    name_file_save = train(config, train_loader, val_loader)
+    return name_file_save
