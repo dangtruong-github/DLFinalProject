@@ -1,9 +1,11 @@
 # Others
 *.tgz
 model_save/
-data/*
-!data/*.en
-!data/*.vi
+*/data/*
+
+# But include files ending with '*en'
+!*/data/*.en
+!*/data/*.vi
 config.ini
 run.txt
 requirements.yml
