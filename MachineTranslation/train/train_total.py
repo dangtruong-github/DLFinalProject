@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
 
 import os
 import json
@@ -9,10 +8,12 @@ from typing import Tuple
 from datetime import datetime
 
 from evaluation.basic_summary import Summary
-from evaluation.bleu_score import BLEUScoreFromIndices
+from evaluation.bleu_score import compute_metrics
 from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
 from train.models.transformer.init_load_save import initTransformer
-from common_functions.constant import SEQ2SEQ, TRANSFORMER
+from train.models.model_finetune.trainer import CreateTrainer
+from data_preprocessing.loader import CustomLoaderNew
+from common_functions.constant import SEQ2SEQ, TRANSFORMER, FINETUNE
 from common_functions.functions import GetParentPath
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -22,24 +23,26 @@ def save_model(
     model: nn.Module,
     optimizer,
     epoch: int,
-    path: str
+    folder: str
 ):
+    final_path = os.path.join(folder, "model.pt")
     torch.save({
         'epoch': epoch,
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
-    }, path)
+    }, final_path)
 
 
 def load_model(
     model: nn.Module,
     optimizer,
-    path
+    folder: str
 ) -> Tuple[
     nn.Module,
     optim.Optimizer,
     int
 ]:
+    path = os.path.join(folder, "model.pt")
     checkpoint = torch.load(path, map_location=torch.device(device))
 
     # print(type(checkpoint["model_state_dict"]))
@@ -51,10 +54,28 @@ def load_model(
     return model, optimizer, epoch
 
 
+def FinetuneTrain(
+    config,
+    hf_train_tokenized,
+    hf_val_tokenized
+) -> str:
+    trainer, loss_history, output_dir = CreateTrainer(config,
+                                                      hf_train_tokenized,
+                                                      hf_val_tokenized)
+    trainer.train()
+
+    print(f"Epoch: {loss_history.epochs}")
+    print(f"Train loss: {loss_history.train_loss}")
+    print(f"Eval loss: {loss_history.eval_loss}")
+    print(f"Eval acc: {loss_history.eval_bleu}")
+
+    return output_dir
+
+
 def train(
     config,
-    train_loader: DataLoader,
-    val_loader: DataLoader
+    hf_train_tokenized,
+    hf_val_tokenized
 ) -> str:
     train_acc_list = []
     train_loss_list = []
@@ -65,6 +86,17 @@ def train(
     val_bleu_score_list = []
 
     type_model = config["train"]["model"]
+
+    if type_model == SEQ2SEQ:
+        init_model = initSeq2Seq
+    elif type_model == TRANSFORMER:
+        init_model = initTransformer
+    elif type_model == FINETUNE:
+        return FinetuneTrain(config, hf_train_tokenized, hf_val_tokenized)
+
+    train_loader = CustomLoaderNew(config, hf_train_tokenized, True)
+    val_loader = CustomLoaderNew(config, hf_train_tokenized, False)
+
     batch_print = int(config["train"]["batch_print"])
 
     test_bool = bool(config["general"]["test"])
@@ -73,17 +105,11 @@ def train(
     if test_bool:
         num_epochs = int(config["train"]["epoch_test"])
 
-    
     parent_directory = GetParentPath(config, __file__)
 
     cur_date = datetime.now().strftime("%Y%m%d-%H%M%S")
     # print(cur_date)
     file_save = "{}_{}".format(type_model, cur_date)
-
-    if type_model == SEQ2SEQ:
-        init_model = initSeq2Seq
-    elif type_model == TRANSFORMER:
-        init_model = initTransformer
 
     cur_epoch = -1
 
@@ -91,7 +117,8 @@ def train(
 
     # numpy_final_result = [[] for _ in range(20)]
 
-    SAVE_FOLDER = os.path.join(parent_directory, "model_save", type_model)
+    SAVE_FOLDER = os.path.join(parent_directory, "model_save", type_model,
+                               file_save)
 
     if not os.path.exists(os.path.dirname(SAVE_FOLDER)):
         os.makedirs(os.path.dirname(SAVE_FOLDER))
@@ -99,13 +126,13 @@ def train(
     if not os.path.exists(SAVE_FOLDER):
         os.makedirs(SAVE_FOLDER)
 
-    MODEL_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.pt".format(file_save))
-    JSON_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.json".format(file_save))
+    MODEL_SAVE_PATH = os.path.join(SAVE_FOLDER, "model.pt")
+    JSON_SAVE_PATH = os.path.join(SAVE_FOLDER, "train_stats.json")
 
     if os.path.exists(MODEL_SAVE_PATH) and os.path.exists(JSON_SAVE_PATH):
         model, optimizer, cur_epoch = load_model(model,
                                                  optimizer,
-                                                 path=MODEL_SAVE_PATH)
+                                                 folder=SAVE_FOLDER)
 
         with open(JSON_SAVE_PATH, "r") as f:
             json_data = json.load(f)
@@ -205,9 +232,9 @@ def train(
                            path=MODEL_SAVE_PATH)
 
         # BLEU score
-        pred_torch = pred_torch.numpy()
-        ref_torch = ref_torch.numpy()
-        train_bleu_score = BLEUScoreFromIndices(config, pred_torch, ref_torch)
+        # pred_torch = pred_torch.numpy()
+        # ref_torch = ref_torch.numpy()
+        train_bleu_score = compute_metrics(config, (pred_torch, ref_torch))
         pred_torch = None
         ref_torch = None
 

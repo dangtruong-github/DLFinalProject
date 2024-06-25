@@ -19,10 +19,11 @@ def EvalPipeline(
 
     parent_directory = GetParentPath(config, __file__)
 
-    SAVE_FOLDER = os.path.join(parent_directory, "model_save", type_model)
-    MODEL_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.pt".format(name_file_save))
+    SAVE_FOLDER = os.path.join(parent_directory, "model_save", type_model,
+                               name_file_save)
+    MODEL_SAVE_PATH = os.path.join(SAVE_FOLDER, "model.pt")
     print(MODEL_SAVE_PATH)
-    TXT_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.txt".format(name_file_save))
+    TXT_SAVE_PATH = os.path.join(SAVE_FOLDER, "eval_stats.txt")
 
     if type_model == SEQ2SEQ:
         init_model = initSeq2Seq

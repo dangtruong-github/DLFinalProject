@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 
 from typing import Tuple
 
-from evaluation.bleu_score import BLEUScoreFromIndices
+from evaluation.bleu_score import compute_metrics
 from common_functions.constant import SEQ2SEQ, TRANSFORMER
 from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
 from train.models.transformer.init_load_save import initTransformer
@@ -77,13 +77,13 @@ def Summary(
             if index == 0:
                 pred_torch = pred
                 ref_torch = label
-                print(f"Summary prediction shape: {pred_torch.shape}")
-                print(f"Summary label shape: {ref_torch.shape}")
+                # print(f"Summary prediction shape: {pred_torch.shape}")
+                # print(f"Summary label shape: {ref_torch.shape}")
             else:
                 pred_torch = torch.cat([pred_torch, pred], axis=0)
                 ref_torch = torch.cat([ref_torch, label], axis=0)
-                print(f"Summary prediction shape: {pred_torch.shape}")
-                print(f"Summary label shape: {ref_torch.shape}")
+                # print(f"Summary prediction shape: {pred_torch.shape}")
+                # print(f"Summary label shape: {ref_torch.shape}")
 
             print(f"Summary after model prob shape: {prob.shape}")
             print(f"Summary after model label shape: {label.shape}")
@@ -103,8 +103,8 @@ def Summary(
         loss_avg = float(loss_epoch)/float(len(loader))
 
         # BLEU score
-        pred_torch = pred_torch.numpy()
-        ref_torch = ref_torch.numpy()
-        bleu_score = BLEUScoreFromIndices(config, pred_torch, ref_torch)
+        # pred_torch = pred_torch.numpy()
+        # ref_torch = ref_torch.numpy()
+        bleu_score = compute_metrics(config, (pred_torch, ref_torch))
 
     return acc, loss_avg, bleu_score

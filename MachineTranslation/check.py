@@ -1,4 +1,4 @@
-import numpy as np
+"""import numpy as np
 
 train_new = np.load("./data/train_indices.npy")
 train_all = np.load("./data/train_indices_old.npy")
@@ -16,3 +16,24 @@ for i in range(train_new.shape[0]):
         print(f"Old array: {train_all[i]}")
 
 print(f"Indices wrong: {indices_wrong}")
+"""
+
+import configparser
+
+# Create a ConfigParser instance
+config = configparser.ConfigParser()
+
+# Read your configuration file (if needed)
+config.read("./config.ini")
+
+# Check if a section and key exist
+section_name = "preprocessing"
+key_name = "train_sample_used"
+
+if config.has_section(section_name) and config.has_option(section_name,
+                                                          key_name):
+    # The section and key both exist
+    value = config.get(section_name, key_name)
+    print(f"The value for {key_name} in {section_name} is: {value}")
+else:
+    print(f"{key_name} does not exist in {section_name}.")

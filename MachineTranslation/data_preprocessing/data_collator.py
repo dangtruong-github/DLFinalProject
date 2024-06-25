@@ -1,10 +1,12 @@
 from transformers import DataCollatorForSeq2Seq
 
-from data_preprocessing.df_to_hf_dataset import tokenizer, checkpoint
+from data_preprocessing.tokenize import GetTokenizer, checkpoint
 
 
 def GetDataCollator(config):
-    max_token_length = config["preprocessing"]["max_token_length"]
+    max_token_length = int(config["preprocessing"]["max_token_length"])
+
+    tokenizer = GetTokenizer(config)
 
     data_collator = DataCollatorForSeq2Seq(tokenizer=tokenizer,
                                            model=checkpoint,

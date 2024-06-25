@@ -5,7 +5,7 @@ import torch.optim as optim
 from typing import Tuple
 
 from train.models.transformer.transformer_total import Transformer
-from common_functions.functions import GetDict
+from data_preprocessing.tokenize import GetTokenizer
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -31,11 +31,11 @@ def initTransformer(
     num_layers = int(config["transformer"]["num_layers"])
     seq_len = int(config["preprocessing"]["vn_max_indices"])
 
-    source_dict, target_dict = GetDict(config)
+    vocab_dict = GetTokenizer(config).get_vocab()
 
     model = Transformer(d_model=d_model,
-                        src_vocab_size=len(source_dict.keys()),
-                        target_vocab_size=len(target_dict.keys()),
+                        src_vocab_size=len(vocab_dict.keys()),
+                        target_vocab_size=len(vocab_dict.keys()),
                         seq_len=seq_len,
                         num_layer=num_layers).to(device=device)
     criterion = nn.CrossEntropyLoss().to(device=device)

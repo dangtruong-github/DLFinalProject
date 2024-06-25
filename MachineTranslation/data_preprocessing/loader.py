@@ -26,7 +26,7 @@ def CustomLoader(
     hf_dataset_tokenized,
     type_dataset
 ) -> DataLoader:
-    custom_set = CustomDataset(config, hf_dataset_tokenized)
+    custom_set = CustomDataset(hf_dataset_tokenized)
 
     testing_mode = bool(config["general"]["test"])
     batch_size = int(config["train"]["batch_size"])
@@ -39,5 +39,23 @@ def CustomLoader(
     custom_loader = DataLoader(custom_set, batch_size, shuffle)
 
     print(f"Success creating data loader of {type_dataset}")
+
+    return custom_loader
+
+
+def CustomLoaderNew(
+    config,
+    hf_dataset_tokenized,
+    shuffle
+):
+    custom_set = CustomDataset(hf_dataset_tokenized)
+
+    testing_mode = bool(config["general"]["test"])
+    batch_size = int(config["train"]["batch_size"])
+
+    if testing_mode:
+        batch_size = int(config["train"]["batch_size_test"])
+
+    custom_loader = DataLoader(custom_set, batch_size, shuffle)
 
     return custom_loader
