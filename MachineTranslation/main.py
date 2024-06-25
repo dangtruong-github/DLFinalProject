@@ -19,10 +19,10 @@ test_loader = LoaderPipeline(config, "test")
 
 # Train
 # train
-name_file_save = TrainPipeline(config, train_loader, val_loader)
-print(name_file_save)
+# name_file_save = TrainPipeline(config, train_loader, val_loader)
+# print(name_file_save)
 
-EvalPipeline(config, test_loader, name_file_save)
+# EvalPipeline(config, test_loader, name_file_save)
 
 # CalculateBLEUScore("I stayed in Peru", "I lived in Peru")
 

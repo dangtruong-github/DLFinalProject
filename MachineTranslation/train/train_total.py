@@ -73,8 +73,8 @@ def train(
     if test_bool:
         num_epochs = int(config["train"]["epoch_test"])
 
-    parent_folder_name = config["general"]["containing_folder"]
-    parent_directory = GetParentPath(parent_folder_name, __file__)
+    
+    parent_directory = GetParentPath(config, __file__)
 
     cur_date = datetime.now().strftime("%Y%m%d-%H%M%S")
     # print(cur_date)

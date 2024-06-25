@@ -3,7 +3,10 @@ import json
 import numpy as np
 
 
-def GetParentPath(parent_folder_name, file):
+def GetParentPath(config, file, parent_folder_name=None):
+    if parent_folder_name is None:
+        parent_folder_name = config["general"]["containing_folder"]
+
     parent_directory = os.path.abspath(file)
 
     while os.path.basename(parent_directory) != parent_folder_name:
@@ -16,8 +19,7 @@ def GetDict(config):
     vn_filename_dict = config["preprocessing"]["vn_filename_dict"]
     en_filename_dict = config["preprocessing"]["en_filename_dict"]
 
-    parent_folder_name = config["general"]["containing_folder"]
-    parent_directory = GetParentPath(parent_folder_name, __file__)
+    parent_directory = GetParentPath(config, __file__)
 
     vn_dict_path = os.path.join(parent_directory, "data", vn_filename_dict)
     en_dict_path = os.path.join(parent_directory, "data", en_filename_dict)

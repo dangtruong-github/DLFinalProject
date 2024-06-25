@@ -39,14 +39,15 @@ def to_dict(
 
 
 def CreateDictionary(config):
-    parent_folder_name = config["general"]["containing_folder"]
+    
+    parent_directory = GetParentPath(config, __file__)
 
     vn_filename_train = config["preprocessing"]["vn_filename_train"]
     en_filename_train = config["preprocessing"]["en_filename_train"]
     vn_filename_dict = config["preprocessing"]["vn_filename_dict"]
     en_filename_dict = config["preprocessing"]["en_filename_dict"]
 
-    parent_directory = GetParentPath(parent_folder_name, __file__)
+    parent_directory = GetParentPath(config, __file__)
 
     to_save_path = os.path.join(parent_directory, "data")
 

@@ -67,7 +67,7 @@ def FileToIndices(
     if type_dataset not in ["train", "val", "test"]:
         raise Exception(f"Type dataset {type_dataset} does not exist")
 
-    parent_folder_name = config["general"]["containing_folder"]
+    
 
     vn_filename = config["preprocessing"]["vn_filename_" + type_dataset]
     en_filename = config["preprocessing"]["en_filename_" + type_dataset]
@@ -79,7 +79,7 @@ def FileToIndices(
     vn_max_indices = int(config["preprocessing"]["vn_max_indices"])
     en_max_indices = int(config["preprocessing"]["vn_max_indices"])
 
-    parent_directory = GetParentPath(parent_folder_name, __file__)
+    parent_directory = GetParentPath(config, __file__)
 
     vn_filename_path = os.path.join(parent_directory, "data", vn_filename)
     en_filename_path = os.path.join(parent_directory, "data", en_filename)

@@ -10,6 +10,7 @@ config.ini
 run.txt
 requirements.yml
 *.sh
+package-list.txt
 
 
 

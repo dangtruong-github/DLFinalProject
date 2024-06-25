@@ -16,9 +16,8 @@ def EvalPipeline(
     name_file_save: str
 ):
     type_model = config["train"]["model"]
-    parent_folder_name = config["general"]["containing_folder"]
 
-    parent_directory = GetParentPath(parent_folder_name, __file__)
+    parent_directory = GetParentPath(config, __file__)
 
     SAVE_FOLDER = os.path.join(parent_directory, "model_save", type_model)
     MODEL_SAVE_PATH = os.path.join(SAVE_FOLDER, "{}.pt".format(name_file_save))
