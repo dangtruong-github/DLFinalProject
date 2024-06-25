@@ -52,13 +52,13 @@ def Summary(
             # Data to CUDA if possible
             data = data.to(device=device)
             label = label.to(device=device)
-            print(f"Summary arig data shape: {data.shape}")
-            print(f"Summary arig label shape: {label.shape}")
+            # print(f"Summary arig data shape: {data.shape}")
+            # print(f"Summary arig label shape: {label.shape}")
 
             data = torch.moveaxis(data, 1, 0)
             label = torch.moveaxis(label, 1, 0)
-            print(f"Summary after data shape: {data.shape}")
-            print(f"Summary after label shape: {label.shape}")
+            # print(f"Summary after data shape: {data.shape}")
+            # print(f"Summary after label shape: {label.shape}")
 
             prob = model(data, label)
 
@@ -85,26 +85,26 @@ def Summary(
                 # print(f"Summary prediction shape: {pred_torch.shape}")
                 # print(f"Summary label shape: {ref_torch.shape}")
 
-            print(f"Summary after model prob shape: {prob.shape}")
-            print(f"Summary after model label shape: {label.shape}")
-            print(f"Summary after model data shape: {data.shape}")
-            print(f"Summary after model pred shape: {pred.shape}")
+            # print(f"Summary after model prob shape: {prob.shape}")
+            # print(f"Summary after model label shape: {label.shape}")
+            # print(f"Summary after model data shape: {data.shape}")
+            # print(f"Summary after model pred shape: {pred.shape}")
 
             loss = criterion(prob, label)
 
             loss_epoch += loss.item()
 
             if (index + 1) % 10 == 0:
-                print(f"Finish summary batch {index}")
+                # print(f"Finish summary batch {index}")
                 if test_bool:
                     break
 
         acc = float(num_correct)/float(num_samples) * 100.0
-        loss_avg = float(loss_epoch)/float(len(loader))
+        loss_avg = float(loss_epoch)
 
         # BLEU score
         # pred_torch = pred_torch.numpy()
         # ref_torch = ref_torch.numpy()
-        bleu_score = compute_metrics(config, (pred_torch, ref_torch))
+        score_total = compute_metrics(config, (pred_torch, ref_torch))
 
-    return acc, loss_avg, bleu_score
+    return acc, loss_avg, score_total

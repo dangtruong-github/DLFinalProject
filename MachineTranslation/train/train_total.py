@@ -225,11 +225,11 @@ def train(
             if batch_idx % batch_print == batch_print - 1:
                 curr_acc = float(current_correct) / float(current_size) * 100.0
                 print(f"Batch {batch_idx + 1}: Accuracy: {curr_acc}")
-                print(f"Loss: {float(loss.item()) / float(pred.shape[1])}")
+                print(f"Loss: {loss.item()}")
                 save_model(model=model,
                            optimizer=optimizer,
                            epoch=epoch,
-                           path=MODEL_SAVE_PATH)
+                           folder=SAVE_FOLDER)
 
         # BLEU score
         # pred_torch = pred_torch.numpy()
@@ -247,7 +247,7 @@ def train(
         train_acc_cur *= 100
 
         train_acc_list.append(train_acc_cur)
-        train_loss_list.append(float(loss_epoch) / float(len(train_loader)))
+        train_loss_list.append(float(loss_epoch))
         train_bleu_score_list.append(train_bleu_score)
 
         val_acc_list.append(val_acc)
@@ -263,7 +263,7 @@ def train(
             save_model(model=model,
                        optimizer=optimizer,
                        epoch=epoch,
-                       path=MODEL_SAVE_PATH)
+                       folder=SAVE_FOLDER)
 
             with open(JSON_SAVE_PATH, "w") as f:
                 json_data_save = {
@@ -284,10 +284,10 @@ def train(
 
         print(f"Train accuracy: {train_acc_list[-1]}%")
         print(f"Train loss: {train_loss_list[-1]}")
-        print(f"Train BLEU score: {train_bleu_score_list[-1]}")
+        print(f"Train BLEU score: {train_bleu_score_list[-1]['bleu']}")
 
         print(f"Val accuracy: {val_acc_list[-1]}%")
         print(f"Val loss: {val_loss_list[-1]}")
-        print(f"Val BLEU score: {val_bleu_score_list[-1]}")
+        print(f"Val BLEU score: {val_bleu_score_list[-1]['bleu']}")
 
     return file_save
