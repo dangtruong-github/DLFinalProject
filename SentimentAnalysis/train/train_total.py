@@ -8,12 +8,14 @@ from typing import Tuple
 from datetime import datetime
 
 from evaluation.basic_summary import Summary
-from evaluation.bleu_score import compute_metrics
-from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
-from train.models.transformer.init_load_save import initTransformer
+from evaluation.compute_metrics import compute_metrics
+from train.models.encoder_no_attention.init_load_save import (
+    initNoAttention
+)
+from train.models.encoder_attention.init_load_save import initAttention
 from train.models.model_finetune.trainer import CreateTrainer
 from data_preprocessing.loader import CustomLoaderNew
-from common_functions.constant import SEQ2SEQ, TRANSFORMER
+from common_functions.constant import NOATTENTION, ATTENTION
 from common_functions.functions import GetParentPath
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -79,18 +81,18 @@ def train(
 ) -> str:
     train_acc_list = []
     train_loss_list = []
-    train_bleu_score_list = []
+    train_f1_list = []
 
     val_acc_list = []
     val_loss_list = []
-    val_bleu_score_list = []
+    val_f1_list = []
 
     type_model = config["train"]["model"]
 
-    if type_model == SEQ2SEQ:
-        init_model = initSeq2Seq
-    elif type_model == TRANSFORMER:
-        init_model = initTransformer
+    if type_model == NOATTENTION:
+        init_model = initNoAttention
+    elif type_model == ATTENTION:
+        init_model = initAttention
 
     train_loader = CustomLoaderNew(config, hf_train_tokenized, True)
     val_loader = CustomLoaderNew(config, hf_val_tokenized, False)
@@ -137,11 +139,11 @@ def train(
 
             train_acc_list = json_data["train_acc_list"]
             train_loss_list = json_data["train_loss_list"]
-            train_bleu_score_list = json_data["train_bleu_score"]
+            train_f1_list = json_data["train_f1_list"]
 
             val_acc_list = json_data["val_acc_list"]
             val_loss_list = json_data["val_loss_list"]
-            val_bleu_score_list = json_data["val_bleu_score"]
+            val_f1_list = json_data["val_f1_list"]
 
         # with open(NUMPY_SAVE_PATH, 'rb') as f:
         #    numpy_final_result = pickle.load(f)
@@ -170,30 +172,18 @@ def train(
             # Data to CUDA if possible
             data = data.to(device=device)
             label = label.to(device=device)
-            # print(f"Orig data shape: {data.shape}")
-            # print(f"Orig label shape: {label.shape}")
-
-            data = torch.moveaxis(data, 1, 0)
-            label = torch.moveaxis(label, 1, 0)
-            # print(f"After data shape: {data.shape}")
-            # print(f"After label shape: {label.shape}")
+            data = torch.moveaxis(data, 0, 1)
 
             optimizer.zero_grad()
 
-            prob = model(data, label)
-            prob.retain_grad()
+            prob = model(data)
 
-            pred = torch.argmax(prob, dim=2)
+            loss = criterion(prob, label)
+            loss.backward()
+            optimizer.step()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
 
-            current_correct = (pred == label).sum()
-            current_size = pred.shape[0] * pred.shape[1]
-
-            correct_samples += current_correct
-            total_samples += current_size
-
-            prob = torch.moveaxis(prob, (1, 2), (0, 1))
-            label = torch.moveaxis(label, 1, 0)
-            pred = torch.moveaxis(pred, 1, 0)
+            pred = torch.argmax(prob, dim=1)
 
             if batch_idx == 0:
                 pred_torch = pred
@@ -206,22 +196,13 @@ def train(
                 print(f"Train prediction shape: {pred_torch.shape}")
                 print(f"Train label shape: {ref_torch.shape}")
 
-            # print(f"After model prob shape: {prob.shape}")
-            # print(f"After model label shape: {label.shape}")
-            # print(f"After model data shape: {data.shape}")
-            # print(f"After model pred shape: {pred.shape}")
-
-            loss = criterion(prob, label)
-            loss.retain_grad()
-            loss.backward()
-
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=5)
-            optimizer.step()
-
+            current_correct = (pred == label).sum().item()
+            correct_samples += current_correct
+            total_samples += data.shape[1]
             loss_epoch += loss.item()
 
             if batch_idx % batch_print == batch_print - 1:
-                curr_acc = float(current_correct) / float(current_size) * 100.0
+                curr_acc = float(current_correct) / float(data.shape[1]) * 100
                 print(f"Batch {batch_idx + 1}: Accuracy: {curr_acc}")
                 print(f"Loss: {loss.item()}")
                 save_model(model=model,
@@ -232,12 +213,12 @@ def train(
         # BLEU score
         # pred_torch = pred_torch.numpy()
         # ref_torch = ref_torch.numpy()
-        train_bleu_score = compute_metrics(config, (pred_torch, ref_torch))
+        train_scores = compute_metrics(config, (pred_torch, ref_torch))
         pred_torch = None
         ref_torch = None
 
         # Validation
-        val_acc, val_loss, val_bleu_score = Summary(config, val_loader, model)
+        val_acc, val_loss, val_scores = Summary(config, val_loader, model)
 
         print("Finish summary")
 
@@ -246,11 +227,11 @@ def train(
 
         train_acc_list.append(train_acc_cur)
         train_loss_list.append(float(loss_epoch))
-        train_bleu_score_list.append(train_bleu_score)
+        train_f1_list.append(train_scores)
 
         val_acc_list.append(val_acc)
         val_loss_list.append(val_loss)
-        val_bleu_score_list.append(val_bleu_score)
+        val_f1_list.append(val_scores)
 
         # for i in range(20):
         #    numpy_final_result[i].extend(final_result[i])
@@ -267,11 +248,11 @@ def train(
                 json_data_save = {
                     "train_acc_list": train_acc_list,
                     "train_loss_list": train_loss_list,
-                    "train_bleu_score": train_bleu_score_list,
+                    "train_f1_list": train_f1_list,
 
                     "val_acc_list": val_acc_list,
                     "val_loss_list": val_loss_list,
-                    "val_bleu_score": val_bleu_score_list
+                    "val_f1_list": val_f1_list
                 }
 
                 json.dump(json_data_save, f)
@@ -282,10 +263,10 @@ def train(
 
         print(f"Train accuracy: {train_acc_list[-1]}%")
         print(f"Train loss: {train_loss_list[-1]}")
-        print(f"Train BLEU score: {train_bleu_score_list[-1]['bleu']}")
+        print(f"Train scores: {train_f1_list[-1]}")
 
         print(f"Val accuracy: {val_acc_list[-1]}%")
         print(f"Val loss: {val_loss_list[-1]}")
-        print(f"Val BLEU score: {val_bleu_score_list[-1]['bleu']}")
+        print(f"Val scores: {val_f1_list[-1]}")
 
     return file_save

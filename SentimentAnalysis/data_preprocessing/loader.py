@@ -5,7 +5,7 @@ from torch.utils.data import Dataset, DataLoader
 class CustomDataset(Dataset):
     def __init__(self, data):
         self.data = data["input_ids"]
-        self.label = data["labels"]
+        self.label = data["label"]
         self.length = len(data)
 
     def __len__(self):
