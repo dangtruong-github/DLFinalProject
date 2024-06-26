@@ -6,25 +6,26 @@ from train.models.transformer.transformer_decoder import TransformerDecoder
 
 
 class Transformer(nn.Module):
-    def __init__(self, d_model, src_vocab_size, target_vocab_size, seq_len,
+    def __init__(self, d_model, vocab_dict, seq_len,
                  num_layer=6, factor=4, n_head=8):
         super(Transformer, self).__init__()
         self.d_model = d_model
-        self.src_vocab_size = src_vocab_size
-        self.target_vocab_size = target_vocab_size
+        self.vocab_dict = vocab_dict
+        self.src_vocab_size = len(vocab_dict.keys())
+        self.target_vocab_size = len(vocab_dict.keys())
         self.seq_len = seq_len
         self.num_laye = num_layer
         self.factor = factor
         self.n_head = n_head
 
         self.encoder = TransformerEncoder(seq_len=seq_len,
-                                          vocab_size=src_vocab_size,
+                                          vocab_size=len(vocab_dict.keys()),
                                           d_model=d_model,
                                           num_layer=num_layer,
                                           factor=factor,
                                           n_head=n_head)
         self.decoder = TransformerDecoder(seq_len=seq_len,
-                                          vocab_size=target_vocab_size,
+                                          vocab_size=len(vocab_dict.keys()),
                                           d_model=d_model,
                                           num_layer=num_layer,
                                           factor=factor,
@@ -55,7 +56,11 @@ class Transformer(nn.Module):
 
         return trg
 
-    def forward(self, src, trg):
+    def forward(self, src, trg=None):
+        if trg is None:
+            trg = torch.full(size=(src.shape[0], 1),
+                             fill_value=self.vocab_dict["<s>"],
+                             dtype=torch.int64)
 
         trg_mask = self.make_target_mask(trg)
         enc_out = self.encoder(src)

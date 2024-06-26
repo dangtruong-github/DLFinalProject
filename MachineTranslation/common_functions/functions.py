@@ -46,9 +46,9 @@ def IndicesToSentence(
 
         if word == "<pad>":
             break
-        elif word == "<eos>":
+        elif word == "</s>":
             break
-        elif word == "<sos>":
+        elif word == "<s>":
             continue
         elif word == "<unk>":
             sentence += "John "
@@ -70,7 +70,7 @@ def SentenceToIndices(
     indices = []
     tokens = sentence.split(" ")
 
-    indices.append(dict_words["<sos>"])
+    indices.append(dict_words["<s>"])
 
     for index, token in enumerate(tokens):
         if index >= max_indices - 1:
@@ -88,7 +88,7 @@ def SentenceToIndices(
             indices.append(dict_words["<unk>"])
 
     if len(indices) < max_indices:
-        indices.append(dict_words["<eos>"])
+        indices.append(dict_words["</s>"])
 
     while len(indices) < max_indices:
         indices.append(dict_words["<pad>"])

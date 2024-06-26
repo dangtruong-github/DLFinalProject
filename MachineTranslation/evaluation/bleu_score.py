@@ -41,8 +41,8 @@ def BLEUScoreFromIndices(
     pred_sentence = []
     ref_sentence = []
 
-    print("<sos> token index: {}".format(en_dict["<sos>"]))
-    print("<eos> token index: {}".format(en_dict["<eos>"]))
+    print("<s> token index: {}".format(en_dict["<s>"]))
+    print("</s> token index: {}".format(en_dict["</s>"]))
 
     for i in range(predictions.shape[0]):
         pred_sentence.append(IndicesToSentence(predictions[i, :], en_dict))

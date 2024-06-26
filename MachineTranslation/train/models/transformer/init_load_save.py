@@ -34,8 +34,7 @@ def initTransformer(
     vocab_dict = GetTokenizer(config).get_vocab()
 
     model = Transformer(d_model=d_model,
-                        src_vocab_size=len(vocab_dict.keys()),
-                        target_vocab_size=len(vocab_dict.keys()),
+                        vocab_dict=vocab_dict,
                         seq_len=seq_len,
                         num_layer=num_layers).to(device=device)
     criterion = nn.CrossEntropyLoss().to(device=device)

@@ -10,8 +10,8 @@ def to_dict(
 ):
     dict_words = {}
     dict_words["<pad>"] = 0
-    dict_words["<eos>"] = 1
-    dict_words["<sos>"] = 2
+    dict_words["</s>"] = 1
+    dict_words["<s>"] = 2
     dict_words["<unk>"] = 3
     index = 4
 

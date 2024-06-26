@@ -28,7 +28,7 @@ def GetTokenizer(config):
 
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 
-    # new_special_tokens = {"additional_special_tokens": ["<sos>", "<eos>"]}
+    # new_special_tokens = {"additional_special_tokens": ["<s>", "</s>"]}
 
     # Add the new special token to the tokenizer
     # tokenizer.add_special_tokens(new_special_tokens)
