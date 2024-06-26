@@ -8,7 +8,7 @@ from common_functions.functions import GetParentPath
 source_lang = "english"
 target_lang = "vietnamese"
 
-checkpoint = "google-t5/t5-small"
+checkpoint = "vinai/phobert-base"
 
 
 def GetTokenizer(config):
@@ -28,10 +28,10 @@ def GetTokenizer(config):
 
     tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 
-    new_special_tokens = {"additional_special_tokens": ["<sos>"]}
+    # new_special_tokens = {"additional_special_tokens": ["<sos>", "<eos>"]}
 
     # Add the new special token to the tokenizer
-    tokenizer.add_special_tokens(new_special_tokens)
+    # tokenizer.add_special_tokens(new_special_tokens)
 
     tokenizer.save_pretrained(tokenizer_location)
     print(f"Success loading pretrained tokenizer from {checkpoint}")
