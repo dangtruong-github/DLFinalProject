@@ -13,7 +13,7 @@ from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
 from train.models.transformer.init_load_save import initTransformer
 from train.models.model_finetune.trainer import CreateTrainer
 from data_preprocessing.loader import CustomLoaderNew
-from common_functions.constant import SEQ2SEQ, TRANSFORMER, FINETUNE
+from common_functions.constant import SEQ2SEQ, TRANSFORMER
 from common_functions.functions import GetParentPath
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -91,8 +91,6 @@ def train(
         init_model = initSeq2Seq
     elif type_model == TRANSFORMER:
         init_model = initTransformer
-    elif type_model == FINETUNE:
-        return FinetuneTrain(config, hf_train_tokenized, hf_val_tokenized)
 
     train_loader = CustomLoaderNew(config, hf_train_tokenized, True)
     val_loader = CustomLoaderNew(config, hf_train_tokenized, False)

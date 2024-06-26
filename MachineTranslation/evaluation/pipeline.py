@@ -5,7 +5,7 @@ from train.train_total import load_model
 from train.models.rnn_seq2seq.init_load_save import initSeq2Seq
 from train.models.transformer.init_load_save import initTransformer
 from data_preprocessing.loader import CustomLoaderNew
-from common_functions.constant import SEQ2SEQ, TRANSFORMER, FINETUNE
+from common_functions.constant import SEQ2SEQ, TRANSFORMER
 from common_functions.functions import GetParentPath
 
 
@@ -28,9 +28,6 @@ def EvalPipeline(
         init_model = initSeq2Seq
     elif type_model == TRANSFORMER:
         init_model = initTransformer
-    elif type_model == FINETUNE:
-        return EvalPipelineFinetune(config, hf_dataset_tokenized,    
-                                    name_file_save)
 
     parent_directory = GetParentPath(config, __file__)
 

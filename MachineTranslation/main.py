@@ -2,7 +2,7 @@
 from configparser import ConfigParser
 from data_preprocessing.pipeline import ProcessingPipeline
 from train.pipeline import TrainPipeline
-from evaluation.pipeline import EvalPipeline
+# from evaluation.pipeline import EvalPipeline
 # from evaluation.bleu_score import CalculateBLEUScore
 
 # from train.train import train
@@ -21,7 +21,7 @@ hf_test_tokenized = ProcessingPipeline(config, "test", save=True)
 name_file_save = TrainPipeline(config, hf_train_tokenized, hf_val_tokenized)
 print(name_file_save)
 
-EvalPipeline(config, hf_test_tokenized, name_file_save)
+# EvalPipeline(config, hf_test_tokenized, name_file_save)
 
 # CalculateBLEUScore("I stayed in Peru", "I lived in Peru")
 

@@ -53,4 +53,4 @@ def CreateTrainer(config, hf_train_tokenized, hf_val_tokenized):
         callbacks=[loss_history],
     )
 
-    return trainer
+    return trainer, loss_history, output_dir
