@@ -205,10 +205,6 @@ def train(
                 curr_acc = float(current_correct) / float(data.shape[1]) * 100
                 print(f"Batch {batch_idx + 1}: Accuracy: {curr_acc}")
                 print(f"Loss: {loss.item()}")
-                save_model(model=model,
-                           optimizer=optimizer,
-                           epoch=epoch,
-                           folder=SAVE_FOLDER)
 
         # BLEU score
         # pred_torch = pred_torch.numpy()
@@ -233,12 +229,18 @@ def train(
         val_loss_list.append(val_loss)
         val_f1_list.append(val_scores)
 
+        prev_acc = 0
+        if len(val_f1_list) >= 2:
+            prev_acc = val_f1_list[-2]["accuracy"]
+
+        cur_acc = val_scores["bleu"]
+
         # for i in range(20):
         #    numpy_final_result[i].extend(final_result[i])
         #    print(f"Prob for {i + 1}: min {np.min(numpy_final_result[i])},
         # max: {np.max(numpy_final_result[i])}")
 
-        if epoch % 1 == 0:
+        if epoch % 1 == 0 and prev_acc < cur_acc:
             save_model(model=model,
                        optimizer=optimizer,
                        epoch=epoch,
