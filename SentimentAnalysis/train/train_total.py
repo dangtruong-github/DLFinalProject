@@ -230,17 +230,22 @@ def train(
         val_f1_list.append(val_scores)
 
         prev_acc = 0
+        prev_f1 = 0
         if len(val_f1_list) >= 2:
             prev_acc = val_f1_list[-2]["accuracy"]
+            prev_f1 = val_f1_list[-2]["f1"]
 
-        cur_acc = val_scores["bleu"]
+        cur_acc = val_scores["accuracy"]
+        cur_f1 = val_scores["f1"]
 
         # for i in range(20):
         #    numpy_final_result[i].extend(final_result[i])
         #    print(f"Prob for {i + 1}: min {np.min(numpy_final_result[i])},
         # max: {np.max(numpy_final_result[i])}")
 
-        if epoch % 1 == 0 and prev_acc < cur_acc:
+        cond_save = (prev_acc < cur_acc) and (cur_f1 - prev_f1 > -0.05)
+
+        if epoch % 1 == 0 and cond_save:
             save_model(model=model,
                        optimizer=optimizer,
                        epoch=epoch,
